@@ -1,8 +1,19 @@
-# 🎴 Planning Poker Realtime
+<div align="center">
+  
+  # <img src="readme/logo.svg" alt="Planning Poker Logo" width="24" /> Planning Poker Realtime
 
-Um aplicativo moderno e elegante de Planning Poker (Scrum Poker) para estimativas ágeis em tempo real. Desenvolvido para facilitar o dia a dia de equipes de desenvolvimento distribuídas, garantindo que as estimativas sejam feitas de forma rápida, justa e dinâmica.
+   Um aplicativo moderno e elegante de Planning Poker (Scrum Poker) para estimativas ágeis em tempo real. Desenvolvido para facilitar o dia a dia de equipes de desenvolvimento distribuídas, garantindo que as estimativas sejam feitas de forma rápida, justa e dinâmica.
 
-🚀 **Acesse agora:** [https://planningpokerdev.vercel.app/](https://planningpokerdev.vercel.app/)
+  🚀 **Acesse agora:** [https://planningpokerdev.vercel.app/](https://planningpokerdev.vercel.app/)
+</div>
+
+---
+
+## 📸 Preview
+
+<p align="center">
+  <img src="readme/screenshot.png" alt="Home Page Screenshot" width="800" style="border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+</p>
 
 ---
 
