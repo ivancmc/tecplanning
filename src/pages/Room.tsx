@@ -389,12 +389,9 @@ export default function Room() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Poker Table & Users */}
-        <div className={clsx(
-          "space-y-6 h-full",
-          currentUser?.isSpectator ? "lg:col-span-3" : "lg:col-span-2"
-        )}>
+      <div className="flex flex-col gap-8">
+        {/* Table Section */}
+        <div className="space-y-6">
           <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[400px] h-full flex flex-col transition-colors duration-200">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t("table")}</h2>
@@ -427,9 +424,74 @@ export default function Room() {
             </div>
 
             {/* Poker Table Visualization */}
-            <div className="flex-1 relative flex items-center justify-center py-12">
-              {room.status === "revealed" ? (
-                <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8 md:gap-4 animate-in fade-in zoom-in duration-500">
+            <div className="relative flex items-center justify-center py-12 min-h-[300px]">
+              <div className="absolute inset-0 bg-slate-50 dark:bg-slate-900 rounded-full border-4 border-slate-200 dark:border-slate-700 w-full max-w-md mx-auto aspect-[2/1] sm:aspect-auto sm:h-64 top-1/2 -translate-y-1/2 flex items-center justify-center transition-colors duration-200">
+                {room.status === "revealing" && countdown !== null && (
+                  <div className="text-center animate-pulse">
+                    <div className="text-6xl font-bold text-indigo-600 dark:text-indigo-400">{countdown}</div>
+                  </div>
+                )}
+                {(room.status === "voting" || room.status === "revealed") && (
+                  <div className="text-slate-400 dark:text-slate-500 font-medium text-center px-4">
+                    {room.status === "voting" ? t("voting_in_progress") : (
+                      <div className="flex flex-col items-center">
+                        <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{average > 0 ? average.toFixed(1).replace(/\.0$/, '') : "-"}</span>
+                        <span className="text-[10px] uppercase tracking-widest">{t("average")}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Users around table */}
+              <div className="relative w-full h-full min-h-[300px]">
+                {votingUsers.map((user, index) => {
+                  const totalUsers = votingUsers.length;
+                  const angle = totalUsers > 0 ? (index / totalUsers) * 2 * Math.PI - Math.PI / 2 : 0;
+                  const radiusX = 45;
+                  const radiusY = 40;
+
+                  const left = `calc(50% + ${Math.cos(angle) * radiusX}%)`;
+                  const top = `calc(50% + ${Math.sin(angle) * radiusY}%)`;
+
+                  return (
+                    <div
+                      key={user.id}
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2"
+                      style={{ left, top }}
+                    >
+                      <div className={clsx(
+                        "w-12 h-16 sm:w-16 sm:h-24 rounded-lg border-2 flex items-center justify-center shadow-sm transition-all duration-500",
+                        room.status === "revealing" && user.vote
+                          ? "bg-indigo-600 border-indigo-700 text-white animate-pulse"
+                          : user.vote
+                            ? (room.status === "revealed" ? "bg-white dark:bg-slate-800 border-indigo-600 text-indigo-600" : "bg-indigo-600 border-indigo-700 text-white")
+                            : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-dashed text-slate-400 dark:text-slate-500"
+                      )}>
+                        {room.status === "revealing" && user.vote ? (
+                          <span className="text-2xl">✓</span>
+                        ) : room.status === "revealed" ? (
+                          <span className="text-2xl font-bold">{user.vote || "?"}</span>
+                        ) : user.vote ? (
+                          <span className="text-2xl">✓</span>
+                        ) : (
+                          <span className="text-sm">...</span>
+                        )}
+                      </div>
+                      <div className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 truncate max-w-[150px] text-center bg-white/80 dark:bg-slate-800/80 px-2 py-1 rounded-md backdrop-blur-sm">
+                        {user.name}
+                        {user.id === currentUser?.id && ` (${t("you")})`}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Results Charts Visualization */}
+            {room.status === "revealed" && (
+              <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-700 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8 md:gap-4">
                   {/* Bar Chart Section */}
                   <div className="flex items-end justify-center gap-4 flex-wrap">
                     {sortedVotes.map((voteValue) => {
@@ -515,65 +577,8 @@ export default function Room() {
                     </div>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-slate-50 dark:bg-slate-900 rounded-full border-4 border-slate-200 dark:border-slate-700 w-full max-w-md mx-auto aspect-[2/1] sm:aspect-auto sm:h-64 top-1/2 -translate-y-1/2 flex items-center justify-center transition-colors duration-200">
-                    {room.status === "revealing" && countdown !== null && (
-                      <div className="text-center animate-pulse">
-                        <div className="text-6xl font-bold text-indigo-600 dark:text-indigo-400">{countdown}</div>
-                      </div>
-                    )}
-                    {room.status === "voting" && (
-                      <div className="text-slate-400 dark:text-slate-500 font-medium">
-                        {t("voting_in_progress")}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Users around table */}
-                  <div className="relative w-full h-full min-h-[300px]">
-                    {votingUsers.map((user, index) => {
-                      const totalUsers = votingUsers.length;
-                      const angle = totalUsers > 0 ? (index / totalUsers) * 2 * Math.PI - Math.PI / 2 : 0;
-                      const radiusX = 45;
-                      const radiusY = 40;
-
-                      const left = `calc(50% + ${Math.cos(angle) * radiusX}%)`;
-                      const top = `calc(50% + ${Math.sin(angle) * radiusY}%)`;
-
-                      return (
-                        <div
-                          key={user.id}
-                          className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2"
-                          style={{ left, top }}
-                        >
-                          <div className={clsx(
-                            "w-12 h-16 sm:w-16 sm:h-24 rounded-lg border-2 flex items-center justify-center shadow-sm transition-all duration-500",
-                            room.status === "revealing" && user.vote
-                              ? "bg-indigo-600 border-indigo-700 text-white animate-pulse"
-                              : user.vote
-                                ? "bg-indigo-600 border-indigo-700 text-white"
-                                : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-dashed text-slate-400 dark:text-slate-500"
-                          )}>
-                            {room.status === "revealing" && user.vote ? (
-                              <span className="text-2xl">✓</span>
-                            ) : user.vote ? (
-                              <span className="text-2xl">✓</span>
-                            ) : (
-                              <span className="text-sm">...</span>
-                            )}
-                          </div>
-                          <div className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 truncate max-w-[150px] text-center bg-white/80 dark:bg-slate-800/80 px-2 py-1 rounded-md backdrop-blur-sm">
-                            {user.name}
-                            {user.id === currentUser?.id && ` (${t("you")})`}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Spectators List */}
             {spectatorUsers.length > 0 && (
@@ -593,29 +598,31 @@ export default function Room() {
           </div>
         </div>
 
-        {/* Right Column: Cards Selection */}
+        {/* Cards Selection Section */}
         {!currentUser?.isSpectator && (
-          <div className="lg:col-span-1 h-full">
-            <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 h-full flex flex-col transition-colors duration-200">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t("pick_your_card")}</h2>
-
-              <div className="grid grid-cols-3 gap-3">
-                {FIBONACCI.map((value) => (
-                  <button
-                    key={value}
-                    onClick={() => handleVote(value)}
-                    disabled={room.status === "revealed" || room.status === "revealing"}
-                    className={clsx(
-                      "aspect-[3/4] rounded-xl border-2 flex items-center justify-center text-2xl font-bold transition-all",
-                      (room.status === "revealed" || room.status === "revealing") ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-1 hover:shadow-md",
-                      currentUser?.vote === value
-                        ? "bg-indigo-600 border-indigo-700 text-white shadow-md -translate-y-1"
-                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500"
-                    )}
-                  >
-                    {value}
-                  </button>
-                ))}
+          <div className="w-full">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-200">
+              <div className="flex flex-col gap-4">
+                <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">{t("pick_your_card")}</h2>
+                
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+                  {FIBONACCI.map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => handleVote(value)}
+                      disabled={room.status === "revealed" || room.status === "revealing"}
+                      className={clsx(
+                        "w-10 sm:w-14 lg:w-16 aspect-[3/4] rounded-xl border-2 flex items-center justify-center text-lg lg:text-2xl font-bold transition-all",
+                        (room.status === "revealed" || room.status === "revealing") ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-1 hover:shadow-md",
+                        currentUser?.vote === value
+                          ? "bg-indigo-600 border-indigo-700 text-white shadow-md -translate-y-1"
+                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500"
+                      )}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
