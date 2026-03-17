@@ -40,6 +40,7 @@ export default function Room() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [playerToRemove, setPlayerToRemove] = useState<string | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
   const voteRef = useRef<string | null>(null);
 
   const updateRoomFromPresence = useCallback((presenceState: any) => {
@@ -271,6 +272,14 @@ export default function Room() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const confirmExit = () => {
+    setShowExitModal(false);
+    localStorage.removeItem("poker_user_id");
+    localStorage.removeItem("poker_user_name");
+    localStorage.removeItem("poker_is_spectator");
+    navigate("/");
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400"></div></div>;
   }
@@ -394,6 +403,39 @@ export default function Room() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
+      {/* Exit Modal */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl max-w-sm w-full border border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t("confirm_leave_title")}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  {t("confirm_leave_desc")}
+                </p>
+              </div>
+              <div className="flex flex-col w-full gap-2 mt-4 pt-4">
+                <button
+                  onClick={confirmExit}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  {t("confirm_leave_btn")}
+                </button>
+                <button
+                  onClick={() => setShowExitModal(false)}
+                  className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation Modal */}
       {playerToRemove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -454,12 +496,7 @@ export default function Room() {
             {copied ? t("copied") : t("copy_link")}
           </button>
           <button
-            onClick={() => {
-              localStorage.removeItem("poker_user_id");
-              localStorage.removeItem("poker_user_name");
-              localStorage.removeItem("poker_is_spectator");
-              window.location.href = "/";
-            }}
+            onClick={() => setShowExitModal(true)}
             className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
             title={t("leave_game")}
           >

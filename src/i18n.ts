@@ -45,7 +45,10 @@ const resources = {
       confirm_remove_title: "Remove Player",
       confirm_remove_desc: "Are you sure you want to remove {{name}} from the room?",
       cancel: "Cancel",
-      confirm: "Remove"
+      confirm: "Remove",
+      confirm_leave_title: "Leave Game",
+      confirm_leave_desc: "Are you sure you want to go home? You will be leaving the current game.",
+      confirm_leave_btn: "Leave"
     }
   },
   pt: {
@@ -91,7 +94,10 @@ const resources = {
       confirm_remove_title: "Remover Jogador",
       confirm_remove_desc: "Tem certeza que deseja remover {{name}} da sala?",
       cancel: "Cancelar",
-      confirm: "Remover"
+      confirm: "Remover",
+      confirm_leave_title: "Sair do Jogo",
+      confirm_leave_desc: "Você tem certeza que deseja voltar à tela inicial? Você sairá do jogo atual.",
+      confirm_leave_btn: "Sair"
     }
   }
 };
