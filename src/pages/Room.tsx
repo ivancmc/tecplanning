@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Copy, Users, Eye, RotateCcw, LogOut, EyeOff, Bot, Smile } from "lucide-react";
+import { Copy, Users, Eye, RotateCcw, LogOut, EyeOff, Bot, Smile, UserMinus, AlertTriangle } from "lucide-react";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { RealtimeChannel } from "@supabase/supabase-js";
@@ -39,6 +39,7 @@ export default function Room() {
   const [copied, setCopied] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const [playerToRemove, setPlayerToRemove] = useState<string | null>(null);
   const voteRef = useRef<string | null>(null);
 
   const updateRoomFromPresence = useCallback((presenceState: any) => {
@@ -99,19 +100,28 @@ export default function Room() {
           startCountdown();
         }
       })
+      .on("broadcast", { event: "kick" }, ({ payload }) => {
+        if (payload.targetName === userNameRef.current) {
+          localStorage.removeItem("poker_user_id");
+          localStorage.removeItem("poker_user_name");
+          localStorage.removeItem("poker_is_spectator");
+          currentChannel.unsubscribe();
+          setError("you_were_kicked");
+        }
+      })
       .on("broadcast", { event: "reset" }, async () => {
         voteRef.current = null;
         setRoom((prev) => prev ? { ...prev, status: "voting" } : null);
 
         // Each user must reset their own vote in the presence state
         const state = currentChannel.presenceState();
-        const isFirst = Object.keys(state).length === 0 || (state[roomId!]?.[0] as any)?.isCreator;
+        const isCreatorStatus = localStorage.getItem(`poker_room_creator_${roomId}`) === "true";
         const roomName = (state[roomId!]?.[0] as any)?.roomName || "Planning Poker";
 
         await currentChannel.track({
           name: userNameRef.current,
           isSpectator: isSpectatorRef.current,
-          isCreator: !!isFirst,
+          isCreator: isCreatorStatus,
           vote: null,
           roomName,
         });
@@ -150,14 +160,13 @@ export default function Room() {
     const targetChannel = activeChannel || channel;
     if (!targetChannel || !roomId) return;
 
-    const state = targetChannel.presenceState();
-    const isFirst = Object.keys(state).length === 0;
+    const isCreatorStatus = localStorage.getItem(`poker_room_creator_${roomId}`) === "true";
     const roomName = localStorage.getItem(`poker_room_name_${roomId}`) || "Planning Poker";
 
     await targetChannel.track({
       name,
       isSpectator: spectator,
-      isCreator: isFirst,
+      isCreator: isCreatorStatus,
       vote: voteRef.current,
       roomName,
     });
@@ -217,6 +226,23 @@ export default function Room() {
     }
   };
 
+  const handleKick = async (targetName: string) => {
+    if (channel) {
+      await channel.send({
+        type: "broadcast",
+        event: "kick",
+        payload: { targetName },
+      });
+    }
+  };
+
+  const confirmKick = () => {
+    if (playerToRemove) {
+      handleKick(playerToRemove);
+      setPlayerToRemove(null);
+    }
+  };
+
   const handleReset = async () => {
     if (channel) {
       await channel.send({
@@ -253,7 +279,7 @@ export default function Room() {
     return (
       <div className="max-w-md mx-auto mt-12 bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-red-200 dark:border-red-900 text-center transition-colors duration-200">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">{t("room_not_found")}</h2>
-        <p className="text-red-500 dark:text-red-400 mb-6">{error}</p>
+        <p className="text-red-500 dark:text-red-400 mb-6">{t(error)}</p>
         <button
           onClick={() => navigate("/")}
           className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-xl transition-colors"
@@ -368,6 +394,39 @@ export default function Room() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
+      {/* Confirmation Modal */}
+      {playerToRemove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl max-w-sm w-full border border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t("confirm_remove_title")}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  {t("confirm_remove_desc", { name: playerToRemove })}
+                </p>
+              </div>
+              <div className="flex flex-col w-full gap-2 mt-4 pt-4">
+                <button
+                  onClick={confirmKick}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  {t("confirm")}
+                </button>
+                <button
+                  onClick={() => setPlayerToRemove(null)}
+                  className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-200">
         <div>
@@ -477,7 +536,7 @@ export default function Room() {
                     <div
                       key={user.id}
                       className={clsx(
-                        "absolute transform -translate-x-1/2 -translate-y-1/2 flex gap-2",
+                        "group absolute transform -translate-x-1/2 -translate-y-1/2 flex gap-2",
                         // Determine flex direction based on angle to place name outside the table
                         (() => {
                           let normAngle = angle;
@@ -493,7 +552,7 @@ export default function Room() {
                       style={{ left, top }}
                     >
                       <div className={clsx(
-                        "w-12 h-16 sm:w-16 sm:h-24 rounded-lg border-2 flex items-center justify-center shadow-sm transition-all duration-500",
+                        "relative w-12 h-16 sm:w-16 sm:h-24 rounded-lg border-2 flex items-center justify-center shadow-sm transition-all duration-500",
                         room.status === "revealing" && user.vote
                           ? "bg-indigo-600 border-indigo-700 text-white animate-pulse"
                           : user.vote
@@ -508,6 +567,15 @@ export default function Room() {
                           <span className="text-2xl">✓</span>
                         ) : (
                           <span className="text-sm">...</span>
+                        )}
+                        {isCreator && user.id !== currentUser?.id && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setPlayerToRemove(user.name); }}
+                            className="absolute -top-3 -right-3 sm:-top-2 sm:-right-2 p-1.5 sm:p-1 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400 rounded-full shadow-md border border-slate-200 dark:border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            title={t("remove_player")}
+                          >
+                            <UserMinus size={14} className="sm:w-3 sm:h-3" />
+                          </button>
                         )}
                       </div>
                       <div className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 truncate max-w-[150px] text-center bg-white/80 dark:bg-slate-800/80 px-2 py-1 rounded-md backdrop-blur-sm">
@@ -620,8 +688,17 @@ export default function Room() {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {spectatorUsers.map(user => (
-                    <div key={user.id} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-full text-sm font-medium">
-                      {user.name} {user.id === currentUser?.id && `(${t("you")})`}
+                    <div key={user.id} className="group flex items-center gap-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600">
+                      <span>{user.name} {user.id === currentUser?.id && `(${t("you")})`}</span>
+                      {isCreator && user.id !== currentUser?.id && (
+                        <button
+                          onClick={() => setPlayerToRemove(user.name)}
+                          className="p-0.5 mt-0.5 text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-full opacity-0 group-hover:opacity-100 transition-all ml-1"
+                          title={t("remove_player")}
+                        >
+                          <UserMinus size={14} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

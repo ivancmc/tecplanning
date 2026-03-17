@@ -19,6 +19,7 @@ export default function Home() {
     const roomId = crypto.randomUUID();
 
     localStorage.setItem(`poker_room_name_${roomId}`, roomName);
+    localStorage.setItem(`poker_room_creator_${roomId}`, "true");
     localStorage.setItem("poker_user_name", userName);
     localStorage.setItem("poker_is_spectator", isSpectator ? "true" : "false");
 

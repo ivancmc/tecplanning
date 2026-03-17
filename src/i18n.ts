@@ -39,7 +39,13 @@ const resources = {
       vote_one: "vote",
       vote_other: "votes",
       total_coherence: "Total coherence",
-      name_in_use: "This name is already in use by another player"
+      name_in_use: "This name is already in use by another player",
+      you_were_kicked: "You have been removed from the game by the creator.",
+      remove_player: "Remove player",
+      confirm_remove_title: "Remove Player",
+      confirm_remove_desc: "Are you sure you want to remove {{name}} from the room?",
+      cancel: "Cancel",
+      confirm: "Remove"
     }
   },
   pt: {
@@ -79,7 +85,13 @@ const resources = {
       vote_one: "voto",
       vote_other: "votos",
       total_coherence: "Concordância total",
-      name_in_use: "Este nome já está sendo usado por outro jogador"
+      name_in_use: "Este nome já está sendo usado por outro jogador",
+      you_were_kicked: "Você foi removido do jogo pelo criador.",
+      remove_player: "Remover jogador",
+      confirm_remove_title: "Remover Jogador",
+      confirm_remove_desc: "Tem certeza que deseja remover {{name}} da sala?",
+      cancel: "Cancelar",
+      confirm: "Remover"
     }
   }
 };
