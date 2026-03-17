@@ -41,7 +41,40 @@ export default function Room() {
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [playerToRemove, setPlayerToRemove] = useState<string | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [isInactive, setIsInactive] = useState(false);
+  const [reconnectTrigger, setReconnectTrigger] = useState(0);
   const voteRef = useRef<string | null>(null);
+
+  const INACTIVITY_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours
+
+  useEffect(() => {
+    if (!hasJoined || isInactive) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const handleActivity = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsInactive(true);
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    handleActivity();
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(event => document.addEventListener(event, handleActivity));
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => document.removeEventListener(event, handleActivity));
+    };
+  }, [hasJoined, isInactive]);
+
+  const handleReconnect = () => {
+    setIsInactive(false);
+    setIsLoading(true);
+    setReconnectTrigger(prev => prev + 1);
+  };
 
   const updateRoomFromPresence = useCallback((presenceState: any) => {
     const users: User[] = Object.values(presenceState)
@@ -61,7 +94,7 @@ export default function Room() {
   }, []);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || isInactive) return;
 
     const currentChannel = supabase.channel(`room:${roomId}`, {
       config: {
@@ -154,7 +187,7 @@ export default function Room() {
     return () => {
       currentChannel.unsubscribe();
     };
-  }, [roomId]);
+  }, [roomId, isInactive, reconnectTrigger]);
 
   const startCountdown = () => {
     setCountdown(3);
@@ -303,6 +336,22 @@ export default function Room() {
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400"></div></div>;
+  }
+
+  if (isInactive) {
+    return (
+      <div className="max-w-md mx-auto mt-12 bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900 border-x-4 border-l-orange-500 text-center transition-colors duration-200">
+        <AlertTriangle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">{t("session_expired_title")}</h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-6">{t("session_expired_desc")}</p>
+        <button
+          onClick={handleReconnect}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-xl transition-colors"
+        >
+          {t("reconnect")}
+        </button>
+      </div>
+    );
   }
 
   if (error) {

@@ -48,7 +48,10 @@ const resources = {
       confirm: "Remove",
       confirm_leave_title: "Leave Game",
       confirm_leave_desc: "Are you sure you want to go home? You will be leaving the current game.",
-      confirm_leave_btn: "Leave"
+      confirm_leave_btn: "Leave",
+      session_expired_title: "Session Expired",
+      session_expired_desc: "You have been disconnected due to inactivity to save resources.",
+      reconnect: "Reconnect"
     }
   },
   pt: {
@@ -97,7 +100,10 @@ const resources = {
       confirm: "Remover",
       confirm_leave_title: "Sair do Jogo",
       confirm_leave_desc: "Você tem certeza que deseja voltar à tela inicial? Você sairá do jogo atual.",
-      confirm_leave_btn: "Sair"
+      confirm_leave_btn: "Sair",
+      session_expired_title: "Sessão Expirada",
+      session_expired_desc: "Você foi desconectado por inatividade para economizar recursos.",
+      reconnect: "Reconectar"
     }
   }
 };
