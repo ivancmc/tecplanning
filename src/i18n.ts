@@ -38,7 +38,8 @@ const resources = {
       agreement: "Agreement",
       vote_one: "vote",
       vote_other: "votes",
-      total_coherence: "Total coherence"
+      total_coherence: "Total coherence",
+      name_in_use: "This name is already in use by another player"
     }
   },
   pt: {
@@ -77,7 +78,8 @@ const resources = {
       agreement: "Concordância",
       vote_one: "voto",
       vote_other: "votos",
-      total_coherence: "Concordância total"
+      total_coherence: "Concordância total",
+      name_in_use: "Este nome já está sendo usado por outro jogador"
     }
   }
 };

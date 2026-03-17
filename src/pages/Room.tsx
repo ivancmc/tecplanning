@@ -35,6 +35,7 @@ export default function Room() {
   const userNameRef = useRef(userName);
   const isSpectatorRef = useRef(isSpectator);
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
@@ -170,8 +171,14 @@ export default function Room() {
 
   const handleJoinSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (userName.trim()) {
-      joinRoom(userName, isSpectator);
+    setNameError(null);
+    const trimmedName = userName.trim();
+    if (trimmedName) {
+      if (room && room.users.some(u => u.name.toLowerCase() === trimmedName.toLowerCase())) {
+        setNameError("name_in_use");
+        return;
+      }
+      joinRoom(trimmedName, isSpectator);
     }
   };
 
@@ -275,10 +282,23 @@ export default function Room() {
               type="text"
               required
               value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              onChange={(e) => {
+                setUserName(e.target.value);
+                setNameError(null);
+              }}
+              className={clsx(
+                "w-full px-4 py-3 rounded-xl border bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all",
+                nameError
+                  ? "border-red-500 dark:border-red-500"
+                  : "border-slate-300 dark:border-slate-600"
+              )}
               placeholder={t("placeholder_user_name")}
             />
+            {nameError && (
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                {t(nameError)}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center">
