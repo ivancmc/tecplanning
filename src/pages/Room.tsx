@@ -419,11 +419,12 @@ export default function Room() {
                   {room.status === "voting" ? (
                     <button
                       onClick={handleReveal}
+                      disabled={!allVoted}
                       className={clsx(
                         "flex items-center gap-2 font-semibold py-2 px-4 rounded-xl transition-colors",
                         allVoted
                           ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                          : "bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed border border-slate-200 dark:border-slate-700"
                       )}
                     >
                       <Eye size={18} />
