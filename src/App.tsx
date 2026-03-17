@@ -21,6 +21,17 @@ function AppContent({ isDarkMode, toggleTheme, toggleLanguage }: { isDarkMode: b
 
   const confirmExit = () => {
     setShowExitModal(false);
+
+    // Clean all accumulated poker_room_* keys to avoid stale room data
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith("poker_room_name_") || key.startsWith("poker_room_creator_"))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
     localStorage.removeItem("poker_user_id");
     localStorage.removeItem("poker_user_name");
     localStorage.removeItem("poker_is_spectator");
